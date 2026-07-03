@@ -4,8 +4,10 @@
 import argparse
 import html
 import os
+import shutil
 import sqlite3
 import re
+import subprocess
 import sys
 import textwrap
 from datetime import datetime, timezone, timedelta
@@ -16,6 +18,8 @@ import feedparser
 DB_PATH = os.path.expanduser("~/.simon_daily.db")
 POSTS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "posts")
 FEED_URL = "https://simonwillison.net/atom/everything/"
+
+FABRIC_BIN = shutil.which("fabric-ai") or shutil.which("fabric")
 
 
 def get_db():
@@ -110,7 +114,62 @@ def save_post(date_str, md, title):
     return filename
 
 
-def fetch(days=1):
+def translate_post(src_path, lang_code="zh-cn", model=None):
+    """Translate a markdown file using fabric's `translate` pattern.
+
+    Returns the translated text, or None on failure / when fabric is missing.
+    """
+    if not FABRIC_BIN:
+        print("  fabric not found, skipping translation", file=sys.stderr)
+        return None
+
+    with open(src_path, "r", encoding="utf-8") as f:
+        content = f.read()
+
+    cmd = [FABRIC_BIN, "-p", "translate", "-v", f"lang_code:{lang_code}"]
+    if model:
+        cmd.extend(["-m", model])
+
+    try:
+        result = subprocess.run(
+            cmd,
+            input=content,
+            capture_output=True,
+            text=True,
+            timeout=180,
+        )
+    except subprocess.TimeoutExpired:
+        print("  fabric translation timed out", file=sys.stderr)
+        return None
+
+    if result.returncode != 0:
+        err = (result.stderr or "").strip()
+        print(f"  fabric failed (rc={result.returncode}): {err}", file=sys.stderr)
+        return None
+
+    translated = result.stdout.strip()
+    if not translated:
+        print("  fabric returned empty output", file=sys.stderr)
+        return None
+    return translated
+
+
+def save_translation(src_path, lang_code="zh-cn", model=None):
+    """Translate src_path and write to <name>.<lang>.md. Returns True if written."""
+    zh_path = src_path.replace(".md", f".{lang_code}.md")
+    if os.path.exists(zh_path):
+        return False
+
+    translated = translate_post(src_path, lang_code=lang_code, model=model)
+    if not translated:
+        return False
+
+    with open(zh_path, "w", encoding="utf-8") as f:
+        f.write(translated + "\n")
+    return True
+
+
+def fetch(days=1, lang_code="zh-cn", model=None, no_translate=False):
     db = get_db()
     seen = set(
         row[0] for row in db.execute("SELECT id FROM seen").fetchall()
@@ -127,6 +186,7 @@ def fetch(days=1):
     new_count = 0
     skip_count = 0
     saved = []
+    translated = []
 
     for entry in feed.entries:
         entry_id = getattr(entry, "id", "") or getattr(entry, "link", "")
@@ -154,12 +214,21 @@ def fetch(days=1):
         if filename:
             saved.append(filename)
             print(f"  Saved: {filename}", file=sys.stderr)
+
+            if not no_translate:
+                filepath = os.path.join(POSTS_DIR, filename)
+                if save_translation(filepath, lang_code=lang_code, model=model):
+                    zh_name = os.path.basename(
+                        filepath.replace(".md", f".{lang_code}.md")
+                    )
+                    translated.append(zh_name)
+                    print(f"  Translated: {zh_name}", file=sys.stderr)
         else:
             print(f"  Skipped (already saved): {title}", file=sys.stderr)
 
     print(
         f"\nDone: {new_count} new, {skip_count} already seen, "
-        f"{len(saved)} saved to disk",
+        f"{len(saved)} saved to disk, {len(translated)} translated",
         file=sys.stderr,
     )
 
@@ -179,8 +248,30 @@ def main():
         default=1,
         help="How many days back to fetch (default: 1)",
     )
+    parser.add_argument(
+        "--lang",
+        default="zh-cn",
+        help="Target language code for fabric translate (default: zh-cn)",
+    )
+    parser.add_argument(
+        "--model",
+        default=None,
+        help="Model for fabric translate (default: fabric's DEFAULT_MODEL)",
+    )
+    parser.add_argument(
+        "--no-translate",
+        action="store_true",
+        help="Skip translation step",
+    )
     args = parser.parse_args()
-    sys.exit(fetch(days=args.days))
+    sys.exit(
+        fetch(
+            days=args.days,
+            lang_code=args.lang,
+            model=args.model,
+            no_translate=args.no_translate,
+        )
+    )
 
 
 if __name__ == "__main__":
