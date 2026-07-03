@@ -40,14 +40,24 @@ python fetch.py --model gpt-4o
 
 ## 自动运行
 
-通过 GitHub Actions 每天北京时间 8:00 和 20:00 自动运行（UTC 0:00 和 12:00）。详见 `.github/workflows/fetch.yml`。
+通过 GitHub Actions 每天北京时间 8:00 和 20:00 自动运行（UTC 0:00 和 12:00），只抓取原文，不执行翻译。详见 `.github/workflows/fetch.yml`。
 
-CI 中使用 OpenAI `gpt-4o-mini` 模型翻译。要本地运行翻译，需配置 fabric：
+翻译需在本地手动运行（需安装 fabric 并配置 LLM API key）：
 
 ```bash
-# macOS
+# macOS 安装 fabric
 brew install fabric-ai
 fabric --setup  # 配置 API key 和默认模型
+
+# 为所有尚未翻译的原文生成中文译文
+python -c "
+import fetch, os
+for f in os.listdir('posts'):
+    if f.endswith('.md') and not f.endswith('.zh-cn.md'):
+        zh = f.replace('.md', '.zh-cn.md')
+        if not os.path.exists(os.path.join('posts', zh)):
+            fetch.save_translation(os.path.join('posts', f), lang_code='zh-cn')
+"
 ```
 
 ## 配置项
