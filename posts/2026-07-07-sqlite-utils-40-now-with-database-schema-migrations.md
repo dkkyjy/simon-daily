@@ -1,0 +1,11 @@
+# sqlite-utils 4.0, now with database schema migrations
+
+        **Date:** 2026-07-07 19:32 UTC
+        **Link:** https://simonwillison.net/2026/Jul/7/sqlite-utils-4/#atom-everything
+        **Tags:** schema-migrations, projects, sqlite, ai, sqlite-utils, annotated-release-notes, generative-ai, llms, ai-assisted-programming, anthropic, claude, agentic-engineering, claude-mythos-fable
+
+        ---
+
+        This morning I released sqlite-utils 4.0 , the 124th release of that project and the first major version bump since 3.0 in November 2020. In addition to some small but significant breaking changes (described in this upgrade guide ), this version introduces three major features: database migrations , nested transactions (via a new db.atomic() method), and support for compound foreign keys . Database schema migrations using sqlite-utils Schema migrations define a sequence of changes to be made to a SQLite database, plus a mechanism for tracking which migrations have been applied and applying any that are found to be pending. Migrations are defined in Python files using the sqlite-utils Python library , which includes a powerful table.transform() method providing enhanced alter table capabilities that are not supported by SQLite's ALTER TABLE statement. ( table.transform() implements the pattern recommended by the SQLite documentation - create a new temporary table with the new schema, copy across the data, then drop the old table and rename the temporary one in its place.) Here's an example migration file which creates a table called creatures , adds an additional column to it in a second step, then changes the types of two of the columns in a third: from sqlite_utils import Migrations migrations = Migrations ( "creatures" ) @ migrations () def create_table ( db ): db [ "creatures" ]. create ( { "id" : int , "name" : str , "species" : str }, pk = "id" , ) @ migrations () def add_weight ( db ): db [ "creatures" ]. add_column ( "weight" , float ) @ migrations () def change_column_types ( db ): db [ "creatures" ]. transform ( types = { "species" : int , "weight" : str }) Save that as migrations.py and run it against a fresh database like
+
+*(truncated, see original)*
