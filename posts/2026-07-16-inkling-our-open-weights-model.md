@@ -1,0 +1,11 @@
+# Inkling: Our open-weights model
+
+        **Date:** 2026-07-16 15:35 UTC
+        **Link:** https://simonwillison.net/2026/Jul/16/inkling/#atom-everything
+        **Tags:** ai, generative-ai, llms, training-data, pelican-riding-a-bicycle, llm-release
+
+        ---
+
+        Inkling: Our open-weights model Mira Murati's Thinking Machines Lab just released their first open-weights model. Inkling is "a Mixture-of-Experts transformer with 975B total parameters, 41B active" - an Apache-2.0 licensed multimodal model trained on 45 trillion tokens of text, images, audio and video. They're also promising Inkling-Small, a 276B (12B active) model, but that's still being tested and the weights will be released "once that work is complete". The model card is much shorter than I've come to expect from US AI labs. It links to even shorter Training Data Documentation with almost nothing of interest in it - it's best summarized by these two paragraphs: The datasets Thinking Machines Lab uses to develop its AI services includes content that is in the public domain as well as content that may be subject to intellectual property protection. Thinking Machines Lab’s services were developed using publicly available content obtained from the open internet and publicly accessible data repositories. Certain datasets were also obtained from third parties. By Thinking Machines' own admission, this is not a frontier model. It's instead intended as a strong base model for fine-tuning using their own Tinker training platform : Inkling is not the strongest overall model available today, open or closed. Instead, a combination of qualities makes it a good open-weights base for customization: multimodal capabilities, efficient thinking, and availability on Tinker for fine-tuning. There's a lot to like about this release. It's Apache-2.0 licensed, and looks competitive with the open weight models coming out of China - it's good to see the US open weights ecosystem gain a new viable contender to join NVIDIA Nemotron and Gemma 4. Here's its attempt at an SVG pelican riding a bicycle, which I generated using this curl command against the Thinking Machines API: curl " https://tinker.thinkingmachines.dev/services/tinker-prod/oai/api/v1/chat/completions " \
+
+*(truncated, see original)*
