@@ -1,0 +1,11 @@
+# OpenAI’s accidental cyberattack against Hugging Face is science fiction that happened
+
+        **Date:** 2026-07-22 23:51 UTC
+        **Link:** https://simonwillison.net/2026/Jul/22/openai-cyberattack/#atom-everything
+        **Tags:** sandboxing, security, ai, openai, generative-ai, llms, hugging-face, anthropic, paper-review, ai-security-research
+
+        ---
+
+        This story is wild. The short version: OpenAI were running a cybersecurity test against an unreleased model, with the model's guardrail features turned off. Rather than solve the test, the model broke its way out of OpenAI's sandbox, then found exploits to break in to Hugging Face, all so it could cheat on the test by stealing the answers. Along the way it helped make the strongest case yet for how the imbalance of model availability is hurting our ability to secure our software. Here's what happened We currently have three documents to help us understand what happened here. ExploitGym: Can AI Agents Turn Security Vulnerabilities into Real Attacks? is a paper published on 11th May 2026 describing ExploitGym, a new eval suite for LLM-powered agent systems. Security incident disclosure — July 2026 by Hugging Face on 16th July 2026 describes how they detected an attack from an "agentic security-research harness - used LLM still not known" that breached some of their systems. OpenAI and Hugging Face partner to address security incident during model evaluation from OpenAI on 21st July 2026 confesses that it was their agent harness that did this, and that they're working with Hugging Face to clean up the mess. ExploitGym I hadn't seen the ExploitGym paper before and it's a really interesting one. Authors from UC Berkeley, the Max Planck Institute, UC Santa Barbara, and Arizona State designed a new benchmark for evaluating models on their ability to turn a reported vulnerability into a concrete exploit. OpenAI, Anthropic, and Google provided feedback and helped run the benchmark against their models. The benchmark "comprises 898 instances derived from real-world vulnerabilities that affected popular software projects" - including the Linux kernel and V8 JavaScript engine. Here's the paragraph that best represents their benchmark results: Among all configurations, Claude
+
+*(truncated, see original)*
