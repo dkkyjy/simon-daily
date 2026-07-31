@@ -1,0 +1,11 @@
+# Investigating three real-world incidents in our cybersecurity evaluations
+
+        **Date:** 2026-07-30 23:41 UTC
+        **Link:** https://simonwillison.net/2026/Jul/30/three-real-world-incidents/#atom-everything
+        **Tags:** pypi, python, sandboxing, ai, generative-ai, llms, anthropic, ai-ethics, ai-security-research
+
+        ---
+
+        Investigating three real-world incidents in our cybersecurity evaluations It happened again! This is turning into something of a pattern. Last week OpenAI accidentally exploited Hugging Face when one of their frontier models broke out of a sandboxed container and hacked into Hugging Face to try and get the solutions to the cyber benchmark it was executing. This inspired Anthropic to double-check their own logs, and it turned out they had three similar (albeit less impressive) incidents, the earliest of which played out in April! Of the 141,006 evaluation runs we reviewed, we identified three separate incidents (involving six total runs, four of which impacted the same organization; the other two incidents each happened in independent evaluation runs). [...] In all cases, Anthropic’s evaluation prompt specified to Claude that its environment was a simulation and that it had no internet access. Due to a misunderstanding between us and our evaluation partner, this was not the case, and internet access was available. Because of this, when Claude’s search led it to real systems on the open internet, it treated them as part of the exercise. [...] Operating under the false belief that all accessible entities were intended to be in-scope for the exercise, Claude compromised the impacted organizations’ infrastructure using basic techniques, such as exploiting weak passwords and unauthenticated endpoints. One of the companies was targeted because its name happened to match the fictional name in the eval. The most concerning of the three incidents involved Claude uploading a malware package to PyPI, after a comically convoluted sequence of steps to get an account: [...] in order to create a PyPI account, Claude needed an email address. And in order to create an email address, it needed a phone number. To get a phone number, after failing to find a free phone
+
+*(truncated, see original)*
