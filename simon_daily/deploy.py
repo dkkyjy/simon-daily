@@ -18,6 +18,7 @@ DEPLOY_SOURCES = {
     "anthropic-research": {"tag": "anthropic-research", "dir": SIMON_DAILY_DIR / "posts/anthropic-research"},
     "simon_guides": {"tag": "simon-guides", "dir": SIMON_DAILY_DIR / "posts/simon_guides"},
     "anthropic-engineering": {"tag": "anthropic-engineering", "dir": SIMON_DAILY_DIR / "posts/anthropic-engineering"},
+    "agricidaniel": {"tag": "agrici-daniel", "dir": SIMON_DAILY_DIR / "posts/agricidaniel"},
 }
 
 

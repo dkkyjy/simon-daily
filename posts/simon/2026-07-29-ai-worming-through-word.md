@@ -1,0 +1,24 @@
+# AI Worming through Word
+
+        **Date:** 2026-07-29 18:43 UTC
+        **Link:** https://simonwillison.net/2026/Jul/29/ai-worming-through-word/#atom-everything
+        **Tags:** microsoft, security, ai, prompt-injection, generative-ai, llms
+
+        ---
+
+        > *Feed summary: AI Worming through Word
+Neat new prompt injection variant by Håkon Måløy, who found a way to upgrade prompt injection attacks against Microsoft Word to full self-replicating worms:
+
+An attacker places*
+
+29th July 2026 - Link Blog
+
+**[AI Worming through Word](https://enklypesalt.com/posts/context-collapse-part3-ai-worming-through-word/)** ([via](https://news.ycombinator.com/item?id=49096188 "Hacker News")) Neat new prompt injection variant by Håkon Måløy, who found a way to upgrade prompt injection attacks against Microsoft Word to full self-replicating worms:
+
+> An attacker places hidden instructions in a document that is later used as source material in Copilot for Word. Copilot may interpret those instructions as part of the user’s request, causing it to manipulate the document being drafted or edited. Copilot may then also copy the hidden instructions into the resulting document, turning that document into a new carrier. If the carrier is subsequently used in another Copilot-assisted workflow, the instructions can trigger again and propagate into further documents, even without the attacker’s original document being present.
+
+We've seen plenty of hidden white-on-white text before - the kids [are using it in their job applications now](https://x.com/ScienceYael/status/2082175224007848019) - but this is the first one I've seen that deliberately copies instructions to self-replicate itself.
+
+It was responsibly disclosed to Microsoft who then had 144 days to work on a fix, but so far (unsurprisingly) there's no mitigation that covers the full class of attack.
+
+Posted [29th July 2026](/2026/Jul/29/) at 6:43 pm

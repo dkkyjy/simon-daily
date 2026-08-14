@@ -61,6 +61,15 @@ SOURCES = {
         "home_url": "https://simonwillison.net/guides/",
         "listing_url": "https://simonwillison.net/guides/",
     },
+    "agricidaniel": {
+        "name": "Agrici Daniel",
+        "author": "Agrici Daniel",
+        "feed_url": None,
+        "dir": "agricidaniel",
+        "feed_type": "listing",
+        "home_url": "https://agricidaniel.com/",
+        "listing_url": "https://agricidaniel.com/blog",
+    },
 }
 
 

@@ -41,6 +41,30 @@ def api_list_posts(
     return posts
 
 
+@app.get("/api/posts/{slug}/bilingual")
+def api_get_post_bilingual(slug: str):
+    """Get post content in both original and Chinese side by side."""
+    from simon_daily import list_posts, read_post_content
+    posts = list_posts()
+    match = [p for p in posts if p["slug"] == slug]
+    if not match:
+        return JSONResponse({"error": "not found"}, status_code=404)
+    post = match[0]
+
+    orig_content = read_post_content(post["orig_file"])
+    zh_content = read_post_content(post["zh_file"]) if post["zh_file"] else None
+
+    return {
+        "slug": post["slug"],
+        "title": orig_content["title"],
+        "orig": orig_content["content"],
+        "zh": zh_content["content"] if zh_content else None,
+        "source": post["source"],
+        "source_name": post["source_name"],
+        "has_translation": post["has_translation"],
+    }
+
+
 @app.get("/api/posts/{slug}")
 def api_get_post(slug: str, lang: str = Query("orig")):
     """Get post content by slug."""
@@ -167,5 +191,6 @@ if UI_DIST.exists():
 
 # -- 启动 -------------------------------------------
 if __name__ == "__main__":
-    print(f"simon-daily UI: http://127.0.0.1:8080")
-    uvicorn.run(app, host="127.0.0.1", port=8080)
+    port = int(sys.argv[1])
+    print(f"simon-daily UI: http://127.0.0.1:{port}")
+    uvicorn.run(app, host="127.0.0.1", port=port)

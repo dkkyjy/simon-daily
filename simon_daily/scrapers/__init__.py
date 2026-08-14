@@ -10,6 +10,11 @@ from simon_daily.scrapers.anthropic_engineering import (
     _parse_anthropic_engineering_listing,
     _extract_anthropic_engineering_date,
 )
+from simon_daily.scrapers.agricidaniel import (
+    fetch_from_listing_agricidaniel,
+    _parse_agricidaniel_listing,
+    _extract_date_from_article,
+)
 
 __all__ = [
     "fetch_from_listing_claude",
@@ -20,4 +25,7 @@ __all__ = [
     "fetch_from_listing_anthropic_engineering",
     "_parse_anthropic_engineering_listing",
     "_extract_anthropic_engineering_date",
+    "fetch_from_listing_agricidaniel",
+    "_parse_agricidaniel_listing",
+    "_extract_date_from_article",
 ]

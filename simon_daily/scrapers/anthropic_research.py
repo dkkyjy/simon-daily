@@ -34,7 +34,15 @@ def _parse_anthropic_research_listing(soup, base_url="https://www.anthropic.com"
             continue
         href = link.get("href", "")
         full_url = href if href.startswith("http") else f"{base_url}{href}"
-        title = link.get_text(strip=True)
+
+        # Extract title from the title element (not the full link text which includes date+category)
+        title_el = link.find("span", class_=lambda c: c and "title" in c)
+        if title_el:
+            title = title_el.get_text(strip=True)
+        else:
+            # Fallback: get the last span/div text
+            all_spans = link.find_all(["span", "div"])
+            title = all_spans[-1].get_text(strip=True) if all_spans else ""
         articles.append({
             "url": full_url,
             "title": title,

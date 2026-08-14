@@ -1,70 +1,118 @@
 # Simon Willison Daily Reader
 
-每天自动抓取 [Simon Willison's Weblog](https://simonwillison.net/) 的最新文章，保存为本地 Markdown 文件，并使用 [fabric](https://github.com/danielmiessler/fabric) 的 `translate` pattern 翻译成中文。
+多源博客抓取器，支持 [Simon Willison's Weblog](https://simonwillison.net/)、[Addy Osmani](https://addyosmani.com/blog/)、[Claude Blog](https://claude.com/blog/)、[Anthropic Research](https://www.anthropic.com/research)、[Anthropic Engineering](https://www.anthropic.com/engineering) 和 [Simon Willison's Guides](https://simonwillison.net/guides/)。
+
+抓取文章保存为本地 Markdown，并使用 [fabric-ai](https://github.com/danielmiessler/fabric) 的 `translate` / `summarize` pattern 翻译成中文或生成摘要。提供 FastAPI 后端和 React 前端。
+
+## 安装
+
+```bash
+pip install feedparser requests beautifulsoup4 markdownify fastapi uvicorn
+```
+
+翻译和摘要功能需要 [fabric-ai](https://github.com/danielmiessler/fabric) 在 PATH 中可用。
 
 ## 用法
 
+### 抓取文章
+
 ```bash
-# 安装依赖
-pip install feedparser
-
-# 获取最近 1 天的文章并翻译为中文
-python fetch.py
-
-# 获取最近 3 天的文章
-python fetch.py --days 3
-
-# 跳过翻译
-python fetch.py --no-translate
-
-# 指定其他目标语言（默认 zh-cn）
-python fetch.py --lang ja-jp
-
-# 指定 fabric 模型
-python fetch.py --model gpt-4o
+python fetch.py                                          # 默认抓取 Simon Willison 最近 1 天
+python fetch.py --source addy --days 3
+python fetch.py --source anthropic-research --no-translate
+python fetch.py --source claude
+python fetch.py --source anthropic-engineering
+python fetch.py --source simon_guides
+python fetch.py --lang ja-jp --model gpt-4o              # 指定翻译目标语言和模型
 ```
 
-## 依赖
+### CLI 子命令
 
-- Python 3 + `feedparser`
-- [fabric-ai](https://github.com/danielmiessler/fabric)（用于翻译）需在 PATH 中可调用（`fabric-ai` 或 `fabric`）
+```bash
+python fetch.py summarize --source claude                # 生成 AI 摘要
+python fetch.py translate-remaining                      # 翻译所有未翻译的文章
+python fetch.py fetch-all-anthropic                      # 批量抓取所有 Anthropic Research 文章
+```
 
-## 输出
+### Web UI
 
-文章保存到 `posts/` 目录：
+```bash
+python server.py                    # FastAPI 后端 http://127.0.0.1:8080
+cd ui && npm run dev                # React 开发服务器 :5173（代理 /api 到 :8080）
+cd ui && npm run build              # 生产构建 → ui/dist/
+```
+
+### 每日任务
+
+```bash
+python daily_task.py                # 抓取所有来源 + 部署中文版到个人网站
+python daily_task.py --days 3 --dry-run
+```
+
+### 在 Python 中使用
+
+```python
+from simon_daily import SOURCES, fetch, list_posts, translate_post
+
+print(SOURCES.keys())                        # ['simon', 'addy', 'claude', ...]
+fetch(source_key="simon", days=1)            # 抓取并翻译
+posts = list_posts(source_key="addy")        # 列出已保存文章
+translate_post(posts[0]["orig_file"])        # 翻译单篇文章
+```
+
+## 数据源
+
+| Key | 名称 | 方式 |
+|-----|------|------|
+| `simon` | Simon Willison | Atom Feed |
+| `addy` | Addy Osmani | RSS + 全文抓取 |
+| `claude` | Claude Blog | 列表抓取（分页） |
+| `anthropic-research` | Anthropic Research | 列表抓取（单页） |
+| `anthropic-engineering` | Anthropic Engineering | 列表抓取（单页） |
+| `simon_guides` | Simon Willison Guides | 列表抓取（单页） |
+
+无 RSS 的源（`feed_url: None`）调用 `fetch()` 时会自动切换到列表抓取模式。所有文章以 Markdown 格式保存到 `posts/<source-dir>/`：
 
 - 原文：`YYYY-MM-DD-slugified-title.md`
 - 中文译文：`YYYY-MM-DD-slugified-title.zh-cn.md`
+- AI 摘要：`YYYY-MM-DD-slugified-title.summary.md`
 
-已抓取的文章 ID 记录在 `~/.simon_daily.db`（SQLite），避免重复处理。
+去重基于文件名，已抓取的文章会自动跳过。
 
-## 自动运行
+## 项目结构
 
-通过 GitHub Actions 每天北京时间 8:00 和 20:00 自动运行（UTC 0:00 和 12:00），只抓取原文，不执行翻译。详见 `.github/workflows/fetch.yml`。
+```
+simon_daily/                          # 核心包
+├── sources.py                        # SOURCES 注册表、BASE_DIR、slugify
+├── content.py                        # HTML→Markdown 转换
+├── formatters.py                     # 文章格式化（Atom/RSS）
+├── io.py                             # 文件读写、文章列表
+├── translate.py                      # fabric-ai 翻译和摘要封装
+├── fetcher.py                        # 抓取编排（feed + listing 分发）
+├── cli.py                            # 命令行子命令
+├── deploy.py                         # 部署流水线
+└── scrapers/                         # 特定来源的 listing 抓取器
+    ├── claude.py
+    ├── anthropic_research.py
+    └── anthropic_engineering.py
 
-翻译需在本地手动运行（需安装 fabric 并配置 LLM API key）：
-
-```bash
-# macOS 安装 fabric
-brew install fabric-ai
-fabric --setup  # 配置 API key 和默认模型
-
-# 为所有尚未翻译的原文生成中文译文
-python -c "
-import fetch, os
-for f in os.listdir('posts'):
-    if f.endswith('.md') and not f.endswith('.zh-cn.md'):
-        zh = f.replace('.md', '.zh-cn.md')
-        if not os.path.exists(os.path.join('posts', zh)):
-            fetch.save_translation(os.path.join('posts', f), lang_code='zh-cn')
-"
+ui/                                   # React/TypeScript 前端（Vite）
+fetch.py                              # 入口：委托 cli.main()
+daily_task.py                         # 入口：委托 deploy.daily_main()
+server.py                             # FastAPI 应用
 ```
 
-## 配置项
+## API 端点
 
-| 参数 | 默认 | 说明 |
+| 方法 | 路径 | 说明 |
 |------|------|------|
-| `--days N` | `1` | 抓取最近 N 天的文章 |
-| `--lang CODE` | `zh-cn` | fabric translate 的目标语言 |
-| `--model NAME` | fabric 默认 | fabric 翻译使用的模型 |
-| `--no-translate` | - | 跳过翻译步骤 |
+| GET | `/api/sources` | 可用来源列表 |
+| GET | `/api/posts[?source=&search=]` | 文章列表（支持搜索和筛选） |
+| GET | `/api/posts/{slug}?lang=` | 文章内容（原文/中文） |
+| POST | `/api/fetch/{source_key}?days=N` | 触发抓取（后台线程） |
+| POST | `/api/translate/{slug}` | 翻译一篇文章 |
+| GET/POST | `/api/posts/{slug}/summary` | 查看/生成摘要 |
+
+## GitHub Actions
+
+`.github/workflows/fetch.yml` 每天 UTC 0:00/12:00 自动抓取 Simon Willison 的最新文章（仅原文，不翻译）。
