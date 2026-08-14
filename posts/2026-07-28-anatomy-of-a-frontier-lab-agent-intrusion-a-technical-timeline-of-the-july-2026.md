@@ -1,0 +1,11 @@
+# Anatomy of a Frontier Lab Agent Intrusion: A Technical Timeline of the July 2026 Incident
+
+        **Date:** 2026-07-28 21:28 UTC
+        **Link:** https://simonwillison.net/2026/Jul/28/anatomy-of-a-frontier-lab-agent-intrusion/#atom-everything
+        **Tags:** jinja, python, security, ai, openai, generative-ai, llms, hugging-face, coding-agents, ai-security-research, openai-hugging-face-incident
+
+        ---
+
+        Anatomy of a Frontier Lab Agent Intrusion: A Technical Timeline of the July 2026 Incident Hugging Face just released this extremely detailed technical description of OpenAI's recent accidental cyberattack against their infrastructure . This attack was very sophisticated, and the resulting document doubles as a crash-course in modern adversarial security approaches. We're still waiting for more details from OpenAI on how their agent broke out of its sandbox. The package proxy that it found a zero-day vulnerability in has now been confirmed as JFrog's Artifactor, and JFrog and OpenAI Collaboration on Zero-Day Security Findings from JFrog links to the Artifactory 7.161.15 release notes which list 8 separate CVEs credited to OpenAI staff members. Having broken out through the HTTP proxy, the agent started by establishing a base of operations for the rest of the attack: [...] the agent escaped its sandbox by exploiting a zero-day in the package registry cache proxy, one of its primary permitted network egress with internet, then abused a public code-evaluation external sandbox hosted on a third-party provider's infrastructure. It was able to run commands as root/admin on that external sandbox and used it as a control, staging, and egress base for the entire campaign: it acted as an external launchpad for the agent. (That "third-party provider" turned out to be Modal .) It then spent five days - from Thursday 8th to Monday 13th July - executing a classic attack pattern: establishing C2 (command and control), reconnaissance, escalating privileges, dumping configuration information, exfiltrating the target data, and cleaning up after itself. (The first Hugging Face post about the incident followed on Thursday 16th , and OpenAI's confession came on Tuesday 21st .) Along the way it used all kinds of neat tricks. At one point it found an unsafe Jinja2 template execution and used it
+
+*(truncated, see original)*

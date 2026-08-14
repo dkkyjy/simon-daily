@@ -1,0 +1,11 @@
+# Now we have a timeline of the OpenAI accidental attack against Hugging Face
+
+        **Date:** 2026-08-07 23:55 UTC
+        **Link:** https://simonwillison.net/2026/Aug/7/openai-timeline/#atom-everything
+        **Tags:** security, ai, openai, generative-ai, llms, hugging-face, ai-security-research, openai-hugging-face-incident, accidental-cyberattacks
+
+        ---
+
+        OpenAI gave a last-minute presentation at the Black Hat security on Wednesday about "the Hugging Face Incident" ( previously on this blog). The video was published yesterday. It's short and information dense and well worth watching, in particular because it provides full details of what happened and how things played out inside OpenAI. I've used the video to construct the timeline below. Here's the timeline. My favourite detail is at the end: OpenAI found out that they were responsible for the attack on Hugging Face when they reached out to ask to have their credentials revoked (after their internal investigation) and learned that they had been revoked already since they were used in that attack! May 7 : OpenAI starts a new training run for an experimental, unreleased model. ( Do they mean an evaluation run? They say training run in the video, and later mention a "reward signal to judge how well they're doing", so I guess this really was about training a model, not evaluating one that was already trained.) May 8 : An agent is accidentally given an impossible task involving a Google Drive link despite no internet access). It tries attacking the Artifactory packaging service, fails, but discovers it can write files into Artifactory . A few days later : A different agent gets stuck on a task because a key file was accidentally omitted. It tries to "reach out to another agent" by writing a note into Artifactory asking if anyone has the file. Following days : More agents discover this new informal message board while browsing Artifactory's file listings, and start reading and writing messages. May 26 : Agents successfully execute an SSRF attack on Artifactory for the first time, gaining indirect internet access by having Artifactory fetch external content for them. June 11
+
+*(truncated, see original)*
