@@ -43,6 +43,15 @@ SOURCES = {
         "home_url": "https://www.anthropic.com/research",
         "listing_url": "https://www.anthropic.com/research",
     },
+    "openai-research": {
+        "name": "OpenAI Research",
+        "author": "OpenAI",
+        "feed_url": None,
+        "dir": "openai-research",
+        "feed_type": "listing",
+        "home_url": "https://openai.com/zh-Hans-CN/research/",
+        "listing_url": "https://openai.com/zh-Hans-CN/research/index/",
+    },
     "anthropic-engineering": {
         "name": "Anthropic Engineering",
         "author": "Anthropic",

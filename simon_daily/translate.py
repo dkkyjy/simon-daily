@@ -1,8 +1,37 @@
 """Translation and summarization via fabric-ai."""
+import re
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+
+def post_process(translated, source_path):
+    """Clean known fabric-ai translate artifacts from the model output.
+
+    Fixes (learned from batch translation of simon-daily 2026-09-0x):
+    - stray <think> draft before the real translation -> keep text after </think>
+    - leaked translate pattern instructions (IMPORTANT / 重要提示 variants)
+    - localized or mojibake tag labels -> restore from source **Tags:**
+    - broken image markdown from extra blank line
+    """
+    if '</think>' in translated:
+        translated = translated.split('</think>', 1)[1].lstrip('\n')
+    translated = re.sub(
+        r'(?m)^[ \t]*→?[ \t]*(IMPORTANT:.*|重要提示[：:].*)$\n*', '', translated)
+    translated = translated.replace('[![\n\n](', '[![\n](')
+    try:
+        with open(source_path, encoding='utf-8') as fh:
+            src = fh.read()
+        m = re.search(r'\*\*Tags:\*\*\s*(.+)', src)
+        if m:
+            tag = m.group(1).strip()
+            translated = re.sub(
+                r'(?m)^(\s*)\*\*[^*]*(标签|鏍囩撅)[^*]*\*\*.*$',
+                lambda mm: f"{mm.group(1)}**标签：** {tag}", translated)
+    except Exception:
+        pass
+    return translated.strip()
 
 
 def translate_post(filepath, model=None, lang_code="zh-cn"):
@@ -21,16 +50,21 @@ def translate_post(filepath, model=None, lang_code="zh-cn"):
     try:
         with open(filepath, encoding="utf-8") as fh:
             file_content = fh.read()
-        cmd = [fabric_bin, "-p", "translate", "-v", f"lang_code:{lang_code}"]
+        cmd = [fabric_bin, "-p", "translate", "--suppress-think", "-v", f"lang_code:{lang_code}", "-r"]
         if model:
             cmd += ["-m", model]
-        resp = subprocess.run(cmd, input=file_content, capture_output=True, text=True, timeout=180)
+        resp = subprocess.run(cmd, input=file_content, capture_output=True, text=True, timeout=600)
         if resp.returncode != 0:
             print(f"  [ERROR] fabric translate failed (rc={resp.returncode}): {resp.stderr[:200]}", file=sys.stderr)
             return None
         translated = resp.stdout.strip()
         if not translated:
             print(f"  [ERROR] empty fabric output", file=sys.stderr)
+            return None
+
+        translated = post_process(translated, filepath)
+        if not translated:
+            print(f"  [ERROR] empty output after post-processing", file=sys.stderr)
             return None
 
         with open(zh_path, "w", encoding="utf-8") as f:

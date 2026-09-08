@@ -9,6 +9,7 @@ from simon_daily.scrapers.claude import fetch_from_listing_claude
 from simon_daily.scrapers.anthropic_research import fetch_from_listing_anthropic_research
 from simon_daily.scrapers.anthropic_engineering import fetch_from_listing_anthropic_engineering
 from simon_daily.scrapers.agricidaniel import fetch_from_listing_agricidaniel
+from simon_daily.scrapers.openai_research import fetch_from_listing_openai_research
 
 
 def fetch(source_key, days=1, lang_code="zh-cn", model=None, no_translate=False):
@@ -82,6 +83,10 @@ def fetch_from_listing(source_key, year=None, lang_code="zh-cn", model=None, no_
         )
     if source_key == "anthropic-research":
         return fetch_from_listing_anthropic_research(
+            lang_code=lang_code, model=model, no_translate=no_translate,
+        )
+    if source_key == "openai-research":
+        return fetch_from_listing_openai_research(
             lang_code=lang_code, model=model, no_translate=no_translate,
         )
     if source_key == "anthropic-engineering":

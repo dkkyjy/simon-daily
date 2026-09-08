@@ -16,6 +16,7 @@ DEPLOY_SOURCES = {
     "addy": {"tag": "addy-osmani", "dir": SIMON_DAILY_DIR / "posts/addy"},
     "claude": {"tag": "claude-blog", "dir": SIMON_DAILY_DIR / "posts/claude"},
     "anthropic-research": {"tag": "anthropic-research", "dir": SIMON_DAILY_DIR / "posts/anthropic-research"},
+    "openai-research": {"tag": "openai-research", "dir": SIMON_DAILY_DIR / "posts/openai-research"},
     "simon_guides": {"tag": "simon-guides", "dir": SIMON_DAILY_DIR / "posts/simon_guides"},
     "anthropic-engineering": {"tag": "anthropic-engineering", "dir": SIMON_DAILY_DIR / "posts/anthropic-engineering"},
     "agricidaniel": {"tag": "agrici-daniel", "dir": SIMON_DAILY_DIR / "posts/agricidaniel"},
@@ -78,7 +79,7 @@ def deploy_zh_to_site(dry_run=False):
                 link_match = re.search(r'\*\*链接：\*\*\s*(https?://\S+)', content)
                 orig_link = link_match.group(1) if link_match else ""
                 desc_match = re.search(
-                    r'\*\*链接：\*\*\s*\S+\s*\n\n(.+?)(?:\n\n|\n##|\Z)',
+                    r'\*\*链接：\*\*\s*\S+\s*\n\n(?:---\s*\n\n)?(.+?)(?:\n\n|\n##|\Z)',
                     content, re.DOTALL
                 )
                 description = desc_match.group(1).strip().replace('"', "'")[:200] if desc_match else title
@@ -113,6 +114,50 @@ originalLink: "{orig_link}"
         total_copied += copied
     print(f"\n  Summary: {total_copied} deployed, {total_errors} errors")
     return total_copied
+
+
+def auto_push_to_site(dry_run=False):
+    """Commit and push new blog articles to the personal Astro site.
+
+    Only stages files under src/content/blog/ so in-progress UI/manual edits
+    in the site repo are never swept into the commit.
+    """
+    print(f"\n{'='*60}")
+    print("Auto-pushing new posts to personal site")
+    print(f"{'='*60}")
+    if not ASTRO_DIR.joinpath(".git").exists():
+        print("  [SKIP] Not a git repo, skipping push")
+        return 0
+    blog_dir = SITE_BLOG
+    # stage only what lives under the blog content dir
+    changed = subprocess.run(
+        ["git", "-C", str(ASTRO_DIR), "status", "--porcelain", "--", "src/content/blog/"],
+        capture_output=True, text=True
+    )
+    if not changed.stdout.strip():
+        print("  Nothing new in blog/, nothing to push")
+        return 0
+    if dry_run:
+        print("  [DRY-RUN] Would commit:\n" + changed.stdout)
+        return 0
+    subprocess.run(
+        ["git", "-C", str(ASTRO_DIR), "add", "--", "src/content/blog/"],
+        check=True
+    )
+    commit = subprocess.run(
+        ["git", "-C", str(ASTRO_DIR), "commit", "-m", "auto-deploy: sync simon-daily posts"],
+        capture_output=True, text=True
+    )
+    if commit.returncode != 0:
+        print(f"  [WARN] commit failed: {commit.stderr.strip()}")
+        return 0
+    print(f"  {commit.stdout.strip()}")
+    push = subprocess.run(
+        ["git", "-C", str(ASTRO_DIR), "push", "origin", "main"],
+        capture_output=True, text=True
+    )
+    print(f"  push: {push.stdout.strip() or push.stderr.strip()}")
+    return 0
 
 
 def restart_astro(dry_run=False):
@@ -176,11 +221,12 @@ def daily_main():
     parser.add_argument("--dry-run", action="store_true", help="Dry run")
     parser.add_argument("--no-deploy", action="store_true", help="Skip deployment")
     parser.add_argument("--no-restart", action="store_true", help="Skip Astro restart")
+    parser.add_argument("--no-push", action="store_true", help="Skip auto push to site")
     args = parser.parse_args()
 
     setup_env()
 
-    sources_to_fetch = ["simon", "addy", "claude", "anthropic-research", "simon_guides", "anthropic-engineering"]
+    sources_to_fetch = ["simon", "addy", "claude", "anthropic-research", "simon_guides", "anthropic-engineering", "openai-research"]
     for sk in sources_to_fetch:
         run_fetch(sk, args.days, dry_run=args.dry_run)
 
@@ -191,6 +237,8 @@ def daily_main():
         if new_count and not args.dry_run:
             if not args.no_restart:
                 restart_astro(dry_run=False)
+        if new_count and not args.dry_run and not args.no_push:
+            auto_push_to_site(dry_run=False)
 
     print(f"\n{'='*60}")
     print(f"Daily task completed!")
