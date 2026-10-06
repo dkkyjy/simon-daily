@@ -101,7 +101,13 @@ def fetch_from_listing_claude(lang_code="zh-cn", model=None, no_translate=False,
 
         before = len(article_links)
         article_links.update(page_links)
-        print(f"    Found {len(page_links)} links ({len(article_links) - before} new)")
+        new_links = len(article_links) - before
+        print(f"    Found {len(page_links)} links ({new_links} new)")
+        if new_links == 0:
+            # Pagination has wrapped around (the site returns the same page
+            # content past the end), so no further pages hold new articles.
+            print(f"    No new links on page {page}, stopping")
+            break
         page += 1
         time.sleep(0.5)
 
