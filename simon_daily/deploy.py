@@ -23,6 +23,18 @@ DEPLOY_SOURCES = {
 }
 
 
+# --- 站点写入总开关 (2026-10-10) -----------------------------------------
+# 默认关闭：个人站 ~/storage/github/ac-site-template 不再接收 simon-daily 文章
+# （用户决定：个人站只留自己的 notes，blog 全清）。
+# 临时恢复：SIMON_SITE_DEPLOY=1 python3 daily_task.py
+SITE_DEPLOY_ENV = "SIMON_SITE_DEPLOY"
+
+
+def site_deploy_enabled() -> bool:
+    """是否允许写入个人站（默认 False = 只抓取+翻译，不复制/不重启/不 push）。"""
+    return os.environ.get(SITE_DEPLOY_ENV, "0").strip().lower() in ("1", "true", "yes", "on")
+
+
 def setup_env():
     """Ensure fabric-ai is in PATH for subprocess calls."""
     os.environ.setdefault("PATH",
@@ -232,6 +244,9 @@ def daily_main():
 
     if args.no_deploy:
         print("\nSkipping deployment (--no-deploy)")
+    elif not site_deploy_enabled():
+        print(f"\n[SKIP] 站点写入已停用（{SITE_DEPLOY_ENV}=1 可临时恢复）："
+              "不复制文章 / 不重启 Astro / 不 push 个人站")
     else:
         new_count = deploy_zh_to_site(dry_run=args.dry_run)
         if new_count and not args.dry_run:

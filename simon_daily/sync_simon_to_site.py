@@ -74,6 +74,10 @@ def main():
     ap.add_argument("--dry-run", action="store_true", help="只打印将写入的文件，不实际写入")
     args = ap.parse_args()
 
+    if os.environ.get("SIMON_SITE_DEPLOY", "0").strip().lower() not in ("1", "true", "yes", "on"):
+        print(f"[SKIP] 站点写入已停用（SIMON_SITE_DEPLOY=1 可临时恢复）；未写入 {SITE_BLOG}")
+        return 0
+
     site_links = get_site_links()
     todo = []
     for src, cfg in SOURCES.items():
